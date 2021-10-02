@@ -1,53 +1,32 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import contactsActions from '../../redux/contactsActions';
-import { connect } from 'react-redux';
-import {
-  ContactListStyled,
-  ContactItemStyled,
-  RemoveBtnStyled,
-} from './ContactList.styles';
+import { useSelector, useDispatch } from 'react-redux';
+import * as actions from '../redux/phonebook-actions';
+import { getVisibleContacts } from '../redux/phonebook-selectors';
+import s from './ContactList.module.css';
 
-const ContactList = ({ contacts, onRemoveContact }) => {
+function ContactList() {
+  const contacts = useSelector(getVisibleContacts);
+  const dispatch = useDispatch();
+  const onDeleteContact = id => dispatch(actions.deleteContact(id));
+
   return (
-    <ContactListStyled>
+    <ul className={s.list}>
       {contacts.map(({ id, name, number }) => (
-        <ContactItemStyled key={id}>
-          {name} : {number}
-          <RemoveBtnStyled type="button" onClick={() => onRemoveContact(id)}>
-            Remove
-          </RemoveBtnStyled>
-        </ContactItemStyled>
+        <li key={id} className={s.item}>
+          <p className={s.text}>
+            {name}: {number}
+          </p>
+          <button
+            type="button"
+            onClick={() => onDeleteContact(id)}
+            className={s.button}
+          >
+            Delete
+          </button>
+        </li>
       ))}
-    </ContactListStyled>
+    </ul>
   );
-};
+}
 
-ContactList.propTypes = {
-  contacts: PropTypes.arrayOf(
-    PropTypes.shape({
-      id: PropTypes.string.isRequired,
-      name: PropTypes.string.isRequired,
-      number: PropTypes.string.isRequired,
-    }),
-  ).isRequired,
-  onRemoveContact: PropTypes.func.isRequired,
-};
-
-const getContacts = (allContacts, filter) => {
-  const normalizeFilter = filter.toLowerCase();
-
-  return allContacts.filter(contact =>
-    contact.name.toLocaleLowerCase().includes(normalizeFilter),
-  );
-};
-
-const mapStateToProps = ({ contactList: { contacts, filter } }) => {
-  return { contacts: getContacts(contacts, filter) };
-};
-
-const mapDispatchToProps = dispatch => ({
-  onRemoveContact: id => dispatch(contactsActions.removeContact(id)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ContactList);
+export default ContactList;

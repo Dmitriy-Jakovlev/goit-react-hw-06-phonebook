@@ -1,113 +1,78 @@
-import React, { useState } from 'react';
-import { connect } from 'react-redux';
-import contactsActions from '../../redux/contactsActions';
-import PropTypes from 'prop-types';
-import { v4 as uuidv4 } from 'uuid';
+import { useState } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { getContacts } from '../redux/phonebook-selectors';
+import * as phonebookActions from '../redux/phonebook-actions';
+import s from './ContactForm.module.css';
 
-// import { Input } from '../Input/Input';
-import {
-  FormStyled,
-  LabelStyled,
-  InputStyled,
-  SubmitButtonStyled,
-} from './ContactForm.styles';
+function ContactForm() {
+  const contacts = useSelector(getContacts);
+  const dispatch = useDispatch();
+  const onSubmit = (name, number) =>
+    dispatch(phonebookActions.addContact(name, number));
 
-const ContactForm = ({ contacts, onSubmit }) => {
-  const [id, setId] = useState('');
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
 
-  const handleInputValues = evt => {
-    const { name, value } = evt.currentTarget;
+  const contactCheck = () => {
+    const namesIsIn = contacts.reduce(
+      (acc, contact) => [...acc, contact.name],
+      [],
+    );
+    const numbersIsIn = contacts.reduce(
+      (acc, contact) => [...acc, contact.number],
+      [],
+    );
 
-    switch (name) {
-      case 'name':
-        setName(value);
-        break;
-      case 'number':
-        setNumber(value);
-        break;
-      default:
-        return;
+    if (namesIsIn.includes(name) || numbersIsIn.includes(number)) {
+      alert(`${name}${number} is already in contacts`);
     }
 
-    setId(uuidv4());
+    if (name === '' || number === '') {
+      alert('Enter all data, please');
+    }
   };
 
-  const resetForm = () => {
-    setId('');
+  const handleSubmit = event => {
+    event.preventDefault();
     setName('');
     setNumber('');
-  };
-
-  const submitForm = evt => {
-    evt.preventDefault();
-    if (
-      contacts.some(
-        contact =>
-          contact.name.toLowerCase() === evt.target.name.value.toLowerCase(),
-      )
-    ) {
-      alert(
-        'You have contact with this name, please remove old contact and create new',
-      );
+    if (contactCheck()) {
       return;
     }
-    onSubmit({ id, name, number });
-    resetForm();
+
+    onSubmit(name, number);
   };
 
-  const nameInputId = uuidv4();
-  const numberInputId = uuidv4();
-
   return (
-    <FormStyled onSubmit={submitForm}>
-      <LabelStyled htmlFor={nameInputId}>Name</LabelStyled>
-      <InputStyled
-        id={nameInputId}
-        type={'text'}
-        name={'name'}
-        placeholder={'Jason Born'}
-        pattern="^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-        value={name}
-        onChange={handleInputValues}
-        title={
-          "Имя может состоять только из букв, апострофа, тире и пробелов. Например Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan и т. п."
-        }
-        required={true}
-      />
+    <form onSubmit={handleSubmit} className={s.form}>
+      <label className={s.label}>
+        Name:
+        <input
+          type="text"
+          name="name"
+          value={name}
+          placeholder="Jack Sparrow"
+          onChange={event => setName(event.currentTarget.value)}
+          className={s.input}
+        />
+      </label>
 
-      <LabelStyled htmlFor={numberInputId}>Number</LabelStyled>
-      <InputStyled
-        id={numberInputId}
-        type={'tel'}
-        name={'number'}
-        placeholder={'+44-787-123-45-67'}
-        pattern="\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}"
-        value={number}
-        onChange={handleInputValues}
-        title={
-          'Номер телефона должен состоять цифр и может содержать пробелы, тире, круглые скобки и может начинаться с +'
-        }
-        required={true}
-      />
-
-      <SubmitButtonStyled type="submit">Add contact</SubmitButtonStyled>
-    </FormStyled>
+      <label className={s.label}>
+        Number:
+        <input
+          type="tel"
+          name="number"
+          value={number}
+          placeholder="111-11-11"
+          onChange={event => setNumber(event.currentTarget.value)}
+          className={s.input}
+        />
+      </label>
+      <button type="submit" className={s.button}>
+        Add contact
+      </button>
+    </form>
   );
-};
+}
 
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-  contacts: PropTypes.array.isRequired,
-};
-
-const mapStateToProps = state => ({
-  contacts: state.contactList.contacts,
-});
-
-const mapDispatchToProps = dispatch => ({
-  onSubmit: newContact => dispatch(contactsActions.addContact(newContact)),
-});
-
-export default connect(mapStateToProps, mapDispatchToProps)(ContactForm);
+export default ContactForm;

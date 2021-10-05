@@ -1,21 +1,34 @@
-import { getVisibleContacts } from './components/redux/phonebook-selectors';
-import ContactForm from './components/ContactForm';
-import Filter from './components/Filter';
-import ContactList from './components/ContactList';
-import { useSelector } from 'react-redux';
+import React from 'react';
+import {connect} from 'react-redux';
+import ContactForm from './components/ContactForm'
+import ContactList from './components/ContactList'
+import ContactItem from './components/ContactItem';
+import Filter from './components/Filter'
 
-export default function App() {
-  const contacts = useSelector(getVisibleContacts);
-  const totalContactsCount = contacts.length;
-
+function App({ items }) {
+  
   return (
     <>
       <h1>Phonebook</h1>
-      <ContactForm />
+      <ContactForm/>
       <h2>Contacts</h2>
-      <p>Общее кол-во: {totalContactsCount}</p>
-      <Filter />
-      <ContactList />
+
+      {items.length > 0 ? (
+        <>
+          <Filter />
+          <ContactList>
+            <ContactItem />
+          </ContactList>
+        </>
+      ) : (
+        <span>You have no contacts!</span>
+      )}
     </>
-  );
-}
+  )
+};
+
+const mapStateToProps = state => ({
+  items: state.contacts.items,
+});
+
+export default connect(mapStateToProps)(App);
